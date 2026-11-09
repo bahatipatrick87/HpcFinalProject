@@ -1,0 +1,5 @@
+ranks,images_per_rank,total_images,elapsed_seconds_mean,elapsed_seconds_std
+1,1000,1000,0.1800,0.0065
+2,1000,2000,0.1884,0.0044
+4,1000,4000,0.2581,0.0216
+8,1000,8000,0.3834,0.0082

@@ -1,0 +1,5 @@
+n_ranks,images_per_rank,total_images,throughput_img_s,n_gpus,gpu_name
+1,5000,5000,10324.6,1,Apple M4
+2,5000,10000,14605.6,1,Apple M4
+4,5000,20000,10800.0,1,Apple M4
+8,5000,40000,8488.9,1,Apple M4

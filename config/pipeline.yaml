@@ -1,0 +1,28 @@
+# User-customizable workflow (proposal 0.5.5)
+# Stages run in the order listed. Remove or reorder to customize the pipeline.
+dataset:
+  root: "data/EuroSAT"
+  target_width: 64
+  target_height: 64
+
+pipeline:
+  channels: 3
+  # DAG order: io -> fft -> filter -> feature (can enable/disable/reorder)
+  stages:
+    - io
+    - fft
+    - filter
+    - feature
+  # Example: to disable filtering, use stages: [io, fft, feature]
+  # Pipeline (task) parallelism: 3-thread queue pipeline within each MPI rank.
+  # Thread 1 (I/O) loads batch k+1 while Thread 2 (GPU) runs FFT+Filter on
+  # batch k and Thread 3 (CPU) extracts features on batch k-1, overlapping
+  # all three activities in wall-clock time on successive batches.
+  # This IS the primary implementation of task parallelism in this project.
+  # Can also be activated via env TASK_PARALLEL_PREFETCH=1.
+  task_parallel_prefetch: true
+  io_batch_size: 256
+
+  # Hardware Note: The OpenCL C++ implementation dynamically selects GPU devices using modulo arithmetic 
+  # based on the MPI rank. If deployed on a multi-GPU cluster, it will automatically distribute the work 
+  # across all available GPUs. On single integrated GPUs (like Apple Silicon), all ranks share the device.

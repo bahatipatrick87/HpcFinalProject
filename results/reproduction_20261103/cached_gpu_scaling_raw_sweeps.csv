@@ -1,0 +1,9 @@
+n_ranks,sweep,throughput_img_s,note
+1,1,10248.2,"forward order 1,2,4,8"
+1,2,10196.1,"reverse order 8,4,2,1"
+2,1,17731.1,"forward order 1,2,4,8"
+2,2,17622.6,"reverse order 8,4,2,1"
+4,1,14420.3,"forward order 1,2,4,8"
+4,2,14094.1,"reverse order 8,4,2,1"
+8,1,19446.9,"forward order 1,2,4,8"
+8,2,18272.7,"reverse order 8,4,2,1"

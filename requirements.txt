@@ -1,0 +1,7 @@
+numpy
+mpi4py
+Pillow
+tifffile
+PyYAML
+matplotlib
+pyopencl  # used only by experiments/verify_gpu_*.py (independent GPU-profiling verification)

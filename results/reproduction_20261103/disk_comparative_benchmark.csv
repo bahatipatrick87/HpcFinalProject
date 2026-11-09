@@ -1,0 +1,16 @@
+round,implementation,elapsed_seconds
+1,sequential,12.9884
+1,hybrid_P1,6.3742
+1,hybrid_P2,5.2212
+1,hybrid_P4,4.1713
+1,hybrid_P8,3.5654
+2,sequential,13.0594
+2,hybrid_P1,6.3579
+2,hybrid_P2,3.4390
+2,hybrid_P4,4.2643
+2,hybrid_P8,3.7462
+3,sequential,13.0398
+3,hybrid_P1,6.3512
+3,hybrid_P2,3.4522
+3,hybrid_P4,4.3055
+3,hybrid_P8,3.7635

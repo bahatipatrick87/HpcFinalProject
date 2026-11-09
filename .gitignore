@@ -1,0 +1,45 @@
+# OS / Python
+.DS_Store
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+*.log
+.ipynb_checkpoints/
+.pytest_cache/
+
+# Dataset: 3 GB, 54,597 images. Download instructions are in data/README.md.
+data/*
+!data/README.md
+
+# Build outputs (rebuild with scripts/build.sh and create_submission.sh)
+build/
+lib/*.dylib
+lib/*.so
+*.tar.gz
+*.zip
+presentation/node_modules/
+
+# LaTeX build files
+report/*.aux
+report/*.log
+report/*.out
+report/*.toc
+report/*.lof
+report/*.lot
+
+# Outputs of a normal run (overwritten by every mpirun)
+results/features.npy
+results/run_summary.txt
+results/gpu_scaling_logs/
+
+# Personal editor / assistant settings
+.vscode/
+.claude/
+
+# Personal exam-preparation material (kept locally, not published)
+EXAM_QA_PREP.html
+DEFENSE_DEMO.md
+CODE_WALKTHROUGH.md
+presentation/

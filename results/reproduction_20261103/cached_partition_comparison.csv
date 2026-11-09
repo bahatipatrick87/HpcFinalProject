@@ -1,0 +1,9 @@
+ranks,partition,trial,elapsed_seconds,rank_min_s,images
+4,contiguous,1,3.4109,1.6600,54597
+4,cyclic,1,2.6464,2.6349,54597
+4,contiguous,2,3.6752,1.6997,54597
+4,cyclic,2,2.7805,2.7752,54597
+8,contiguous,1,2.8273,1.3552,54597
+8,cyclic,1,2.6128,2.4873,54597
+8,contiguous,2,2.7850,1.3240,54597
+8,cyclic,2,2.3157,2.2275,54597
