@@ -1,3 +1,11 @@
+"""
+Main program of the hybrid MPI + OpenCL + OpenMP image-processing pipeline.
+
+Run with:  mpirun -n P python3 src/main_mpi.py
+
+MPI starts P copies of this program (ranks). Each rank processes its own part
+of the dataset, and rank 0 collects the results at the end.
+"""
 import os
 import sys
 import ctypes

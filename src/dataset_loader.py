@@ -73,6 +73,8 @@ def get_partitioned_paths(
             return []
         my_files = all_files[start_idx : min(end_idx, total_images)]
     else:
+        # Block distribution (report Eq. 3.1): rank r starts at r*Q + min(r, R),
+        # where Q = N // P images per rank and R = N % P left-over images.
         # Strong-scaling mode: fixed total dataset split across ranks.
         # remainder images are distributed one-per-rank to the first
         # `remainder` ranks, so no rank differs from another by more than 1
@@ -98,6 +100,9 @@ def get_partitioned_paths(
 
 def load_images_from_paths(file_paths, target_size=(64, 64), max_pad_to=None):
     """
+    Stage 1 (Load and Preprocess, CPU): read each file and resize it to a
+    64x64x3 array. This is the slowest stage of the pipeline (report Table 5.7).
+
     Load and normalize images from explicit paths into a float32 array
     shaped (N, H, W, C), values in [0, 1].
 

@@ -1,3 +1,10 @@
+"""
+Stage dependency graph (DAG) of the pipeline (report Section 3.2).
+
+Each stage declares the data it needs and the data it produces; the graph
+uses this to check, before any image is processed, that the stages are in a
+valid order.
+"""
 from collections import deque
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, FrozenSet, List, Tuple

@@ -36,8 +36,8 @@ int process_images_fft_cpu(const float *image_data, int batch_size,
 
 /* GPU Stage 3 — High-Pass Filter:
  *   Applies element-wise high-pass filter H(u,v) = 1 - exp(-d^2/50) to
- *   spectrum_data (result of process_images_fft) in-place, writing to
- *   filtered_data. Same dimensions as above.
+ *   spectrum_data (result of process_images_fft) and writes the result to
+ *   the separate array filtered_data. Same dimensions as above.
  *   Uses OpenCL kernel on GPU if available; OpenMP CPU fallback otherwise.
  *   Returns 0 on success, non-zero on error. */
 int apply_frequency_filter_gpu(const float *spectrum_data, int batch_size,
@@ -45,14 +45,15 @@ int apply_frequency_filter_gpu(const float *spectrum_data, int batch_size,
                                 float *filtered_data);
 
 /* Backward-compatible combined call (Stage 2 + Stage 3 in one GPU round-trip).
- * Kept for internal use by the scheduler fallback path; prefer the two-stage
- * calls above so each Python stage maps to one C++ function. */
+ * Used only as a fallback by fft_stage.py with older library builds; the
+ * pipeline calls the two functions above, one per Python stage. */
 int process_images_frequency_domain(const float *image_data, int batch_size,
                                     int width, int height, int channels,
                                     float *output_data);
 
 /* CPU Stage 4 — Feature Extraction:
- *   Computes per-image mean intensity using OpenMP parallel reduction.
+ *   Computes the mean intensity of each image. An OpenMP parallel loop
+ *   gives each thread whole images, so no reduction across threads is needed.
  *   features_out receives one float32 per image.
  *   Returns 0 on success. */
 int extract_features_cpu(const float *processed_data, int batch_size, int width,

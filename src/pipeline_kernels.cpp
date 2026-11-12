@@ -1,3 +1,12 @@
+/*
+ * pipeline_kernels.cpp
+ *
+ * C++ library called from Python. It contains:
+ *   - the two OpenCL GPU kernels: fft_magnitude (Stage 2) and
+ *     highpass_filter (Stage 3);
+ *   - the OpenMP loop for feature extraction (Stage 4);
+ *   - OpenMP CPU versions of Stages 2-3, used only when no GPU is found.
+ */
 #include "pipeline_kernels.h"
 #include <cmath>
 #include <cstring>

@@ -1,3 +1,7 @@
+"""
+Builds the pipeline from the `stages` list in config/pipeline.yaml, so the
+workflow can be changed without recompiling (report Section 3.4).
+"""
 from typing import List
 
 from mpi4py import MPI

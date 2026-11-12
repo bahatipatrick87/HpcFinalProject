@@ -33,14 +33,12 @@ def _weak_scaling_max_images(pipeline_cfg: Dict[str, Any]) -> Optional[int]:
 
 def run_batched_prefetch_pipeline(context: Dict[str, Any], batch_size: int) -> None:
     """
-    Run io (partitioned paths + per-batch load), fft, filter, feature using
-    a full 3-stage pipeline (Task Parallelism).
-    
-    Stage 1: Load & Preprocess (CPU thread)
-    Stage 2: FFT & Filter (GPU thread)
-    Stage 3: Feature Extraction (CPU thread)
-    
-    This fully implements pipeline/task parallelism over the distinct stages.
+    Task parallelism: three threads run the four stages on different
+    batches at the same time (report Section 3.3).
+
+    Thread 1: Stage 1, load and preprocess the next batch (CPU)
+    Thread 2: Stages 2 and 3, FFT and high-pass filter (GPU, OpenCL)
+    Thread 3: Stage 4, feature extraction of the previous batch (CPU, OpenMP)
     """
     import queue
     import threading
