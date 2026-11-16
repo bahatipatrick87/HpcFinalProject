@@ -270,8 +270,7 @@ void cleanup_opencl() {
 static int run_kernel_timed(cl_kernel kern,
                              const float *h_in, float *h_out,
                              size_t data_sz, size_t gws_override,
-                             int extra_arg0, int extra_arg1,
-                             bool use_extra_args,
+                             int width, int height,
                              GpuStageTiming *timing) {
     size_t bytes = data_sz * sizeof(float);
     cl_int err;
@@ -290,12 +289,8 @@ static int run_kernel_timed(cl_kernel kern,
 
     clSetKernelArg(kern, 0, sizeof(cl_mem), &d_in);
     clSetKernelArg(kern, 1, sizeof(cl_mem), &d_out);
-    if (use_extra_args) {
-        clSetKernelArg(kern, 2, sizeof(int), &extra_arg0);
-        clSetKernelArg(kern, 3, sizeof(int), &extra_arg1);
-    } else {
-        clSetKernelArg(kern, 2, sizeof(int), &extra_arg0); /* n_elem */
-    }
+    clSetKernelArg(kern, 2, sizeof(int), &width);
+    clSetKernelArg(kern, 3, sizeof(int), &height);
     size_t gws = gws_override;
     err = clEnqueueNDRangeKernel(g_queue, kern, 1, nullptr,
                                   &gws, nullptr, 0, nullptr, nullptr);
@@ -519,7 +514,7 @@ int apply_frequency_filter_gpu(const float *spectrum_data, int batch_size,
      * GWS = data_sz = batch * height * width * channels. */
     size_t data_sz = (size_t)batch_size * width * height * channels;
     return run_kernel_timed(g_filt_kernel, spectrum_data, filtered_data,
-                             data_sz, data_sz, width, height, true, nullptr);
+                             data_sz, data_sz, width, height, nullptr);
 }
 
 /* ================================================================
@@ -571,7 +566,7 @@ int apply_frequency_filter_gpu_timed(const float *spectrum_data, int batch_size,
     }
     size_t data_sz = (size_t)batch_size * width * height * channels;
     return run_kernel_timed(g_filt_kernel, spectrum_data, filtered_data,
-                             data_sz, data_sz, width, height, true, timing);
+                             data_sz, data_sz, width, height, timing);
 }
 
 /* ================================================================
@@ -592,16 +587,6 @@ int extract_features_cpu(const float *processed_data, int batch_size, int width,
         features_out[i] = (float)(sum / (double)ppi);
     }
     return 0;
-}
-
-int extract_features_cpu_timed(const float *processed_data, int batch_size,
-                               int width, int height, int channels,
-                               float *features_out, double *t_feature_s) {
-    double t0 = wall_sec();
-    int rc = extract_features_cpu(processed_data, batch_size, width, height,
-                                  channels, features_out);
-    if (t_feature_s) *t_feature_s = wall_sec() - t0;
-    return rc;
 }
 
 /* ================================================================

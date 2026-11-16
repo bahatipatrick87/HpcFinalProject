@@ -67,9 +67,3 @@ def pipeline_warnings(graph: TaskGraph) -> List[str]:
     return [f"stage '{name}' runs but none of its outputs is used by a later stage"
             for name in graph.unused_outputs(FINAL_KEYS)]
 
-
-def build_default_pipeline(comm: MPI.Comm) -> TaskGraph:
-    """
-    Build the default four-stage pipeline (proposal DAG: I/O -> FFT -> Filtering -> Feature).
-    """
-    return build_pipeline_from_config(comm, {"pipeline": {"stages": ["io", "fft", "filter", "feature"]}})

@@ -78,11 +78,6 @@ int apply_frequency_filter_gpu_timed(const float *spectrum_data, int batch_size,
                                       int width, int height, int channels,
                                       float *filtered_data, GpuStageTiming *timing);
 
-/* Timed variant of extract_features_cpu. t_feature_s set to elapsed seconds. */
-int extract_features_cpu_timed(const float *processed_data, int batch_size,
-                               int width, int height, int channels,
-                               float *features_out, double *t_feature_s);
-
 /* Query total number of OpenCL GPU devices visible on this platform. */
 int query_gpu_device_count(void);
 

@@ -1,7 +1,7 @@
 """
 Decompose one GPU-stage dispatch into: buffer/H2D transfer, kernel
 execution, and D2H transfer, using OpenCL profiling events for every step,
-next to the host-clock time of the same kernel. Batch size matches Table 5.8
+next to the host-clock time of the same kernel. Batch size matches Table 5.9
 (batch size 64). The driver timestamps are far below the host clock on the
 testbed, so they are evidence of execution only, not timings (report §5.5.3).
 
@@ -25,7 +25,7 @@ KERNEL_SRC = production_kernel_source()
 
 WIDTH = HEIGHT = 64
 CHANNELS = 3
-BATCH_SIZE = 64  # matches Table 5.8
+BATCH_SIZE = 64  # matches Table 5.9
 N_TRIALS = 20
 
 

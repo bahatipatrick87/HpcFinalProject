@@ -6,6 +6,7 @@ dataset:
   target_height: 64
 
 pipeline:
+  # Fixed at 3 (RGB): every image is converted to 64x64x3. Listed for reference only.
   channels: 3
   # DAG order: io -> fft -> filter -> feature (can enable/disable/reorder)
   stages:

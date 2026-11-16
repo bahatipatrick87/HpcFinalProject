@@ -1,8 +1,16 @@
 """
-Generate all report images from the performance data tables.
-Produces PNG files in report/images/ that match the tables in the LaTeX report.
-The strong-scaling, Amdahl and comparative plots read the measured CSVs in
-results/ (strong_scaling.csv, sequential_baseline.csv) directly.
+Generate all report images and save them as PNG files in report/images/.
+
+Six plots are drawn from the measured data in results/:
+  strong_scaling.csv         -> strong_scaling_optimized.png, amdahl_sensitivity.png
+  weak_scaling.csv           -> weak_scaling.png
+  gpu_scaling.csv            -> gpu_concurrency.png
+  openmp_scaling.csv         -> openmp_scaling.png
+  comparative_benchmark.csv  -> comparative_benchmark.png
+Three are design diagrams drawn with shapes, with no measured data:
+  system_architecture.png, parallel_patterns.png, mapping_hierarchy.png
+The Amdahl curves use fit_f and amdahl_speedup from experiments/analyze_amdahl.py,
+so the plots and Table 5.2 use the same calculation.
 
 Run from project root:
     python3 scripts/generate_report_images.py
@@ -50,13 +58,6 @@ def read_csv_columns(name, *cols):
     with (RESULTS / name).open() as f:
         rows = list(csv.DictReader(f))
     return [[float(r[c]) for r in rows] for c in cols]
-
-
-def read_sequential_mean():
-    """Mean full-dataset time from results/sequential_baseline.csv."""
-    with (RESULTS / "sequential_baseline.csv").open() as f:
-        ts = [float(r["elapsed_seconds"]) for r in csv.DictReader(f)]
-    return sum(ts) / len(ts)
 
 
 # ---- colour palette ----

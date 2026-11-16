@@ -26,6 +26,7 @@ def build(stages):
 class TestPipelineDAG(unittest.TestCase):
 
     def test_default_pipeline_edges(self):
+        """The default stages give the chain io -> fft -> filter -> feature."""
         g = build(["io", "fft", "filter", "feature"])
         names = [t.name for t in g.tasks]
         edges = {(names[u], names[v]) for u, v in g.edges}
@@ -36,6 +37,7 @@ class TestPipelineDAG(unittest.TestCase):
         self.assertEqual(pipeline_warnings(g), [])
 
     def test_filter_can_be_removed(self):
+        """Removing the filter from the YAML is valid: features use the FFT output."""
         # Without the filter, features are computed from the FFT output.
         g = build(["io", "fft", "feature"])
         names = [t.name for t in g.tasks]
@@ -44,14 +46,17 @@ class TestPipelineDAG(unittest.TestCase):
         self.assertEqual(pipeline_warnings(g), [])
 
     def test_missing_input_is_rejected(self):
+        """A stage whose input no earlier stage produces is rejected at start-up."""
         with self.assertRaisesRegex(ValueError, "'fft_stage' needs 'input_data'"):
             build(["fft", "filter", "feature"])
 
     def test_unknown_stage_is_rejected(self):
+        """A misspelt stage name in the YAML is rejected at start-up."""
         with self.assertRaisesRegex(ValueError, "unknown pipeline stage 'fltr'"):
             build(["io", "fft", "fltr", "feature"])
 
     def test_filter_after_feature_is_flagged(self):
+        """A valid order whose filter output is never used gives a warning."""
         # Valid graph, but the filter's output is never used.
         g = build(["io", "fft", "feature", "filter"])
         self.assertEqual(pipeline_warnings(g),
@@ -59,6 +64,7 @@ class TestPipelineDAG(unittest.TestCase):
                           "is used by a later stage"])
 
     def test_cycle_is_rejected(self):
+        """Kahn's topological sort detects a cycle and raises an error."""
         g = TaskGraph()
         g.add_task(Task("a", lambda c: None, frozenset(), frozenset({"x"})))
         g.add_task(Task("b", lambda c: None, frozenset({"x"}), frozenset({"y"})))
@@ -67,6 +73,7 @@ class TestPipelineDAG(unittest.TestCase):
             g.topological_order()
 
     def test_run_follows_dependencies(self):
+        """Tasks run in dependency order."""
         order = []
         g = TaskGraph()
         for name, req, prod in [("load", set(), {"a"}), ("gpu", {"a"}, {"b"}),
@@ -77,6 +84,7 @@ class TestPipelineDAG(unittest.TestCase):
         self.assertEqual(order, ["load", "gpu", "cpu"])
 
     def test_registry_covers_all_yaml_stage_names(self):
+        """Every stage name allowed in the YAML has an implementation."""
         self.assertEqual(set(STAGE_REGISTRY), {"io", "fft", "filter", "feature"})
 
 

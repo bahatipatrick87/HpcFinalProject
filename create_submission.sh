@@ -147,7 +147,6 @@ tar -czf "${ARCHIVE_PATH}" \
   --exclude='.pytest_cache' \
   --exclude='*.tar.gz' \
   --exclude='.vscode' \
-  --exclude='.claude' \
   --exclude='* copy.png' \
   src/CMakeLists.txt \
   src/pipeline_kernels.cpp \

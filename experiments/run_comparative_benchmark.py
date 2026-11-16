@@ -1,6 +1,6 @@
 """
 Sequential baseline versus the hybrid pipeline, measured in one experiment
-(report Table 5.10, Figure 5.7).
+(report Table 5.11, Figure 5.7).
 
 Each round times the single-threaded sequential baseline
 (run_sequential_baseline.py, full dataset) and the hybrid pipeline at

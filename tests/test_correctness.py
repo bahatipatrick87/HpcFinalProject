@@ -154,7 +154,7 @@ class TestPipelineKernels(unittest.TestCase):
             err_msg="Filter of zero spectrum must be zero")
 
     def test_filter_attenuates_dc(self):
-        """High-pass filter must attenuate DC component (centre pixel)."""
+        """High-pass filter must attenuate the DC component, which the FFT puts at pixel (0,0)."""
         # Constant unit spectrum
         spec = np.ones((1, self.H, self.W, self.C), dtype=np.float32)
         out  = np.empty_like(spec)

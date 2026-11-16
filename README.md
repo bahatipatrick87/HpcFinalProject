@@ -83,9 +83,9 @@ HpcFinalProject/
 │   ├── run_openmp_fft_scaling.py       # OpenMP thread sweep, CPU FFT path (§5.6.1)
 │   ├── run_stage_breakdown.py          # Per-stage busy time per rank (Table 5.7)
 │   ├── run_partition_comparison.py     # Contiguous vs cyclic split (§5.6.2)
-│   ├── run_pipeline_timing.py          # Stage-overlap proof (Table 5.8)
-│   ├── run_pipeline_onoff_comparison.py # Pipeline ON vs OFF (Table 5.9)
-│   ├── run_comparative_benchmark.py    # Sequential vs hybrid, same rounds (Table 5.10)
+│   ├── run_pipeline_timing.py          # Stage-overlap proof (Table 5.9)
+│   ├── run_pipeline_onoff_comparison.py # Pipeline ON vs OFF (Table 5.10)
+│   ├── run_comparative_benchmark.py    # Sequential vs hybrid, same rounds (Table 5.11)
 │   └── run_sequential_baseline.py      # Single-threaded NumPy baseline (no MPI/GPU/OpenMP)
 ├── scripts/
 │   ├── generate_report_images.py  # Generates all PNG figures for the report

@@ -98,16 +98,16 @@ batches, because sleep invalidates timings. Keep at least 15 GB of disk free for
 python experiments/run_scaling_experiments.py 5        # Table 5.1, Figs 5.2/5.3  (~5 min)
 python experiments/analyze_amdahl.py                   # Table 5.2: Amdahl fit from strong_scaling.csv
 python experiments/run_sequential_baseline.py 3        # sequential stage split, §2.2 (~1 min)
-python experiments/run_comparative_benchmark.py 3      # Table 5.10, Fig 5.7: sequential vs hybrid, same rounds (~4 min)
+python experiments/run_comparative_benchmark.py 3      # Table 5.11, Fig 5.7: sequential vs hybrid, same rounds (~4 min)
 python experiments/run_stage_breakdown.py 8 5          # Table 5.7               (~1 min)
 python experiments/run_partition_comparison.py 3       # cyclic vs contiguous, §5.6.2 (~2 min)
-python experiments/run_pipeline_onoff_comparison.py    # Table 5.9               (~4 min)
+python experiments/run_pipeline_onoff_comparison.py    # Table 5.10              (~4 min)
 python experiments/run_weak_scaling.py 4               # Table 5.3, Fig 5.4  (~2 min)
 python experiments/run_openmp_scaling.py 3             # Table 5.6, Fig 5.6  (~3 min)
 python experiments/run_gpu_scaling.py                  # Table 5.4, one forward sweep
 python experiments/run_gpu_scaling.py --reverse        # one reverse sweep (8,4,2,1)
 python experiments/run_gpu_stage_timing.py             # Table 5.5: GPU stages vs NumPy/OpenMP (no holder needed)
-mpirun -n 1 python experiments/run_pipeline_timing.py  # Table 5.8: stage overlap, [VERIFIED] line
+mpirun -n 1 python experiments/run_pipeline_timing.py  # Table 5.9: stage overlap, [VERIFIED] line
 python experiments/verify_fft_against_numpy.py         # §2.1: every feature vs NumPy, P=1,2,4,8
 python experiments/verify_dataset.py                   # §1.2: what the 54,597 files are
 mpirun -n 8 python experiments/measure_mpi_collectives.py   # Table 4.1: cost of each collective

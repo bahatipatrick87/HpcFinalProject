@@ -1810,7 +1810,7 @@ pipeline is faster at every $P$, including $P=1$.}
 At $P=1$ the hybrid pipeline is already $1.43\times$ faster: the sequential loop
 spends 69.8\,\% of its time loading and 26.2\,\% in the FFT, whereas in the
 pipeline Stages~2--4 overlap with loading, so the $P=1$ time is essentially the
-Load stage alone (about 15.7\,s of the sequential run, against 15.86\,s). MPI
+Load stage alone (about 15.8\,s of the sequential run, against 15.86\,s). MPI
 raises the advantage to $4.49\times$ at $P=8$, limited by the load imbalance
 (Section~\ref{sec:stage-breakdown}); with the images cached the times are 13.5\,s
 sequential and 6.80\,s and 2.64\,s at $P=1$ and $P=8$ ($1.98\times$ and $5.11\times$).

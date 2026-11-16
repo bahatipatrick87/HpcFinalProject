@@ -34,13 +34,13 @@ results/features.npy
 results/run_summary.txt
 results/gpu_scaling_logs/
 
-# Personal editor / assistant settings
+# Personal editor settings
 .vscode/
-.claude/
 
 # Personal exam-preparation material (kept locally, not published)
 EXAM_QA_PREP.html
 DEFENSE_DEMO.md
 CODE_WALKTHROUGH.md
 EXAM_PRACTICE_COMMANDS.md
+EXAM_MOCK_QA.md
 presentation/
