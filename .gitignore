@@ -9,9 +9,8 @@ venv/
 .ipynb_checkpoints/
 .pytest_cache/
 
-# Dataset: 3 GB, 54,597 images. Download instructions are in data/README.md.
-data/*
-!data/README.md
+# Dataset: 3.05 GB, 54,597 images (download instructions in README.md)
+data/
 
 # Build outputs (rebuild with scripts/build.sh and create_submission.sh)
 build/
@@ -19,7 +18,6 @@ lib/*.dylib
 lib/*.so
 *.tar.gz
 *.zip
-presentation/node_modules/
 
 # LaTeX build files
 report/*.aux
@@ -36,11 +34,3 @@ results/gpu_scaling_logs/
 
 # Personal editor settings
 .vscode/
-
-# Personal exam-preparation material (kept locally, not published)
-EXAM_QA_PREP.html
-DEFENSE_DEMO.md
-CODE_WALKTHROUGH.md
-EXAM_PRACTICE_COMMANDS.md
-EXAM_MOCK_QA.md
-presentation/

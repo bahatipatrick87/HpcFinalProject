@@ -10,12 +10,11 @@ Produces results/pipeline_timing.csv with per-batch stage timestamps and
 prints a Gantt-style summary to stdout suitable for inclusion in the report.
 
 Usage:
-    cd /Users/bahatipatrick/HpcFinalProject
+    (from the project root)
     mpirun -n 1 python3 experiments/run_pipeline_timing.py
 or:
     python3 experiments/run_pipeline_timing.py   (single-process)
 """
-import os
 import sys
 import ctypes
 import queue

@@ -1,9 +1,9 @@
 """
-Batched execution with optional pipeline (task) parallelism.
+Task parallelism inside each MPI rank: a 3-thread pipeline over batches.
 
-Three worker threads per MPI rank (queue-based): I/O loads successive batches,
-one thread runs FFT+filter (GPU-bound), one runs feature extraction (CPU-bound),
-so load, GPU stages, and features can overlap on different batches.
+Thread 1 loads batch k+1, Thread 2 runs the GPU stages on batch k, and
+Thread 3 extracts features from batch k-1, so loading, GPU work and CPU work
+overlap in time. The threads are linked by two bounded FIFO queues.
 """
 import os
 from typing import Any, Dict, List, Optional
@@ -12,15 +12,18 @@ import numpy as np
 from mpi4py import MPI
 
 from dataset_loader import get_partitioned_paths, load_eurosat_dataset, load_images_from_paths
-from stages.fft_stage import fft_frequency_stage
-from stages.filter_stage import filter_stage
-from stages.feature_stage import feature_extraction_stage
+from stages.fft_stage import fft_frequency_stage          # Stage 2 -> C++ / OpenCL
+from stages.filter_stage import filter_stage               # Stage 3 -> C++ / OpenCL
+from stages.feature_stage import feature_extraction_stage  # Stage 4 -> C++ / OpenMP
 from utils.dataset_utils import resolve_dataset
 
 
 def _weak_scaling_max_images(pipeline_cfg: Dict[str, Any]) -> Optional[int]:
-    """Same env-var/config priority order as io_stage.py, kept in sync so
-    both execution modes honour the same weak-scaling override."""
+    """Images per rank for weak scaling (None = use the full dataset).
+
+    Same priority as io_stage.py (environment first, then YAML), so both
+    execution modes use the same setting.
+    """
     raw = (
         os.environ.get("HPC_MAX_IMAGES_PER_RANK")
         or os.environ.get("WEAK_SCALING_IMAGES_PER_RANK")
@@ -33,12 +36,12 @@ def _weak_scaling_max_images(pipeline_cfg: Dict[str, Any]) -> Optional[int]:
 
 def run_batched_prefetch_pipeline(context: Dict[str, Any], batch_size: int) -> None:
     """
-    Task parallelism: three threads run the four stages on different
-    batches at the same time (report Section 3.3).
+    Run this rank's images through the 3-thread pipeline (report Section 3.3).
 
     Thread 1: Stage 1, load and preprocess the next batch (CPU)
     Thread 2: Stages 2 and 3, FFT and high-pass filter (GPU, OpenCL)
     Thread 3: Stage 4, feature extraction of the previous batch (CPU, OpenMP)
+    Result: context["features"], one float32 per image, in file order.
     """
     import queue
     import threading
@@ -48,20 +51,21 @@ def run_batched_prefetch_pipeline(context: Dict[str, Any], batch_size: int) -> N
     size = comm.Get_size()
     pipeline_cfg = context.get("pipeline_config") or {}
 
-    dataset_root, (width, height) = resolve_dataset(comm)
+    dataset_root, (width, height) = resolve_dataset(comm)   # dataset folder, 64x64
     max_images = _weak_scaling_max_images(pipeline_cfg)
 
     context["width"] = width
     context["height"] = height
-    context["channels"] = 3
+    context["channels"] = 3                                  # RGB
 
+    # MPI data parallelism: rank 0 lists the files and broadcasts them; each
+    # rank keeps only its own contiguous block of paths (dataset_loader.py)
     paths: List[str] = get_partitioned_paths(
         dataset_root, rank, size, comm=comm, max_images=max_images
     )
 
-    # No on-disk images for this rank (or empty dataset): fall back to the
-    # plain sequential path so behaviour matches io_stage.py exactly instead
-    # of standing up three threads for zero work.
+    # No files for this rank: run the stages once, sequentially, instead of
+    # starting three threads for no work (same behaviour as io_stage.py)
     if not paths:
         context["input_data"] = load_eurosat_dataset(
             dataset_root,
@@ -76,75 +80,67 @@ def run_batched_prefetch_pipeline(context: Dict[str, Any], batch_size: int) -> N
         feature_extraction_stage(context)
         return
 
-    # Task agglomeration (report §4.3): group this rank's images into fixed
-    # batches rather than pipelining one image at a time. Larger batches
-    # amortise the fixed per-dispatch GPU overhead; smaller batches keep the
-    # in-flight memory footprint and pipeline latency low. io_batch_size=256
-    # is the chosen middle ground (see the report for the full trade-off).
+    # Agglomeration (report §4.3): split the paths into batches of batch_size
+    # (256). Larger batches amortise the fixed cost of each GPU launch;
+    # smaller ones use less memory and fill the pipeline sooner.
     bs = max(1, int(batch_size))
     chunks = [paths[i : i + bs] for i in range(0, len(paths), bs)]
 
     def load_chunk(chunk: List[str]) -> np.ndarray:
+        """Stage 1: read and resize one batch -> float32 (N, 64, 64, 3)."""
         if not chunk:
             return np.zeros((0, height, width, 3), dtype=np.float32)
         return load_images_from_paths(chunk, (width, height), max_pad_to=None)
 
-    # Sentinel marks "no more batches" on a queue; using a unique object
-    # (rather than e.g. None) avoids any ambiguity with a legitimate value.
+    # End-of-stream marker. A unique object cannot be confused with real data.
     SENTINEL = object()
 
-    # Two bounded queues chain the three stages: I/O -> GPU compute -> CPU
-    # feature extraction. maxsize=3 caps how many loaded-but-unprocessed
-    # batches can pile up in memory if a downstream stage falls behind —
-    # without a bound, a slow GPU stage would let the I/O thread race ahead
-    # and buffer the entire dataset in RAM.
+    # Two bounded FIFO queues link the three threads. maxsize=3 gives
+    # backpressure: put() blocks when a queue is full, so a fast loader cannot
+    # get ahead of a slow consumer and fill RAM with the whole dataset.
     q1 = queue.Queue(maxsize=3) # I/O -> Compute
     q2 = queue.Queue(maxsize=3) # Compute -> Feature
 
-    all_features = []
+    all_features = []             # filled by Thread 3 only, in batch order
 
-    # Thread 1 (I/O): continuously loads the next batch from disk while the
-    # other two threads are still working on earlier batches — this is what
-    # makes disk I/O overlap with GPU/CPU compute in wall-clock time.
+    # Thread 1 (I/O, producer): loads batches one after another; while it
+    # reads batch k+1 from disk, Threads 2 and 3 work on earlier batches.
     def io_worker():
         for chunk in chunks:
             if not chunk:
                 continue
-            input_data = load_chunk(chunk)
-            # Each batch gets its own shallow copy of the shared context so
-            # the three threads never mutate the same dict concurrently.
+            input_data = load_chunk(chunk)        # Stage 1 (disk read + decode)
+            # Own shallow copy of the context per batch, so no two threads
+            # ever write to the same dictionary
             ctx = context.copy()
             ctx["input_data"] = input_data
-            q1.put(ctx)
-        q1.put(SENTINEL)
+            q1.put(ctx)                           # blocks while q1 is full
+        q1.put(SENTINEL)                          # no more batches
 
-    # Thread 2 (GPU): runs FFT + filter for one batch while Thread 1 loads
-    # the next batch and Thread 3 finishes features for the previous one.
+    # Thread 2 (GPU, consumer of q1 / producer of q2): FFT + filter on batch k
     def compute_worker():
         while True:
-            ctx = q1.get()
+            ctx = q1.get()                        # blocks until a batch is ready
             if ctx is SENTINEL:
-                q2.put(SENTINEL)  # propagate shutdown to the next stage
+                q2.put(SENTINEL)                  # pass shutdown on to Thread 3
                 break
 
-            # FFT and Filter (GPU bound stages)
-            fft_frequency_stage(ctx)
-            filter_stage(ctx)
+            fft_frequency_stage(ctx)              # Stage 2: GPU FFT (ctypes, GIL released)
+            filter_stage(ctx)                     # Stage 3: GPU filter
 
-            q2.put(ctx)
-            q1.task_done()
+            q2.put(ctx)                           # hand batch k to Thread 3
+            q1.task_done()                        # queue bookkeeping (no join() on queues)
 
-    # Thread 3 (CPU/OpenMP): extracts features for one batch while Thread 2
-    # is already running the GPU stages on the next one.
+    # Thread 3 (CPU, consumer of q2): features of batch k-1 while Thread 2
+    # already runs the GPU stages on batch k
     def feature_worker():
         while True:
             ctx = q2.get()
             if ctx is SENTINEL:
                 break
 
-            # Feature Extraction (CPU bound stage)
-            feature_extraction_stage(ctx)
-            all_features.append(ctx["features"])
+            feature_extraction_stage(ctx)         # Stage 4: OpenMP mean per image
+            all_features.append(ctx["features"])  # FIFO queues keep batch order
 
             q2.task_done()
 
@@ -152,18 +148,20 @@ def run_batched_prefetch_pipeline(context: Dict[str, Any], batch_size: int) -> N
     t2 = threading.Thread(target=compute_worker, name="Pipeline_GPU_Thread")
     t3 = threading.Thread(target=feature_worker, name="Pipeline_CPU_Feature_Thread")
 
-    # Starting all three before joining any of them is what actually enables
-    # the overlap: Python's GIL is released during I/O waits and during the
-    # ctypes calls into the C++/OpenCL library, so these three threads do
-    # genuinely make concurrent progress rather than only alternating.
+    # Start all three threads before waiting on any of them; this is what
+    # lets them run at the same time. The GIL is released during file I/O,
+    # image decoding and every ctypes call into the C++ library, so the
+    # threads make real concurrent progress, not just take turns.
     t1.start()
     t2.start()
     t3.start()
 
+    # Wait for all three to finish (Thread 3 ends after the sentinel)
     t1.join()
     t2.join()
     t3.join()
 
+    # One array of features for this rank, later gathered by main_mpi.py
     if all_features:
         context["features"] = np.concatenate(all_features)
     else:

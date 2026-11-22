@@ -163,17 +163,15 @@ tar -czf "${ARCHIVE_PATH}" \
   report/FINAL_COMPLETE_REPORT.tex \
   report/FINAL_COMPLETE_REPORT.pdf \
   report/images/ \
-  "report/images .jpg" \
   tests/ \
   results/*.csv \
-  results/README.md \
   results/report_snapshot_final/ \
+  results/reproduction_20261103/ \
   results/adhoc_measurements.md \
   lib/ \
   requirements.txt \
   README.md \
-  RUN_COMMANDS.md \
-  data/README.md
+  USAGE.md
 
 if [[ ! -f "${ARCHIVE_PATH}" ]]; then
     fail "Archive creation failed."

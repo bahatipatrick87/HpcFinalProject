@@ -23,7 +23,6 @@ Run from project root:
 
 Output: results/pipeline_onoff_comparison.csv
 """
-import os
 import re
 import statistics as st
 import subprocess
