@@ -204,7 +204,7 @@ further multispectral files. The files are
 partitioned across MPI ranks (data parallelism); within each rank, a
 three-thread queue overlaps per-batch disk I/O, GPU computation, and
 CPU post-processing (task/pipeline parallelism); OpenCL work-items and
-an OpenMP reduction provide fine-grained data parallelism inside the
+an OpenMP parallel loop provide fine-grained data parallelism inside the
 GPU kernels and the feature-extraction stage respectively.
 
 On a single-node, 10-core Apple Silicon testbed (one integrated GPU),
@@ -722,7 +722,7 @@ features, so stages do not overlap. This mode exists for comparison.
 Images are processed in chunks of size \texttt{io\_\discretionary{}{}{}batch\_\discretionary{}{}{}size}, and three
 threads per rank form a bounded producer--consumer queue (Listing~\ref{lst:pipeline}):
 Thread~1 loads and normalises batch $k{+}1$, Thread~2 applies the two OpenCL kernels
-to batch $k$, and Thread~3 runs the OpenMP feature reduction on batch $k{-}1$. These
+to batch $k$, and Thread~3 runs the OpenMP feature extraction on batch $k{-}1$. These
 different operations overlap in wall-clock time on different batches, which is
 pipeline/task parallelism. Bounded queues provide back-pressure, a sentinel
 propagates shutdown, and the threads overlap because the GIL is released during
@@ -843,7 +843,7 @@ Within GPU stages (S2, S3) &
   OpenCL work-items over rows, columns, elements &
   Data parallelism (fine-grained) \\[3pt]
 Within CPU stage (S4) &
-  OpenMP \texttt{parallel for} reduction &
+  OpenMP \texttt{parallel for}, \texttt{schedule(static)} &
   Data parallelism (fine-grained) \\[3pt]
 Stage-to-device assignment &
   CPU for S1/S4, GPU for S2/S3 &
