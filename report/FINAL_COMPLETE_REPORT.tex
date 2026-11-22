@@ -1011,6 +1011,7 @@ Table~\ref{tab:comm-costs} the volume and cost of each communication.
   \node[rank] (r1) at (2.9,2.6) {Rank 1};
   \node[rank] (r2) at (5.8,2.6) {Rank 2};
   \node[rank] (r3) at (8.7,2.6) {Rank $P{-}1$};
+  \node at (7.25,2.6) {$\cdots$};
   \node[gpun, minimum width=10.3cm] (gpu) at (4.35,-0.4)
     {Shared GPU (OpenCL) --- 1 device; all ranks contend};
   % disk reads and host--device transfers: straight, one per rank
@@ -1031,7 +1032,7 @@ Table~\ref{tab:comm-costs} the volume and cost of each communication.
     {\texttt{MPI\_Bcast}\\path list, $\approx$5\,MB};
   \node[right,font=\scriptsize,text=NavyBlue!80,align=left] at (9.75,1.35)
     {\texttt{MPI\_Gather}\\1 float/image, \textbf{213\,KB}};
-  \node[right,font=\scriptsize,text=OrangeGPU!90!black,align=left] at (9.75,0.55) {H2D/D2H\\$\sim$12.6\,MB/batch};
+  \node[right,font=\scriptsize,text=OrangeGPU!90!black,align=left] at (9.75,0.55) {H2D + D2H per GPU stage\\$\approx$12.6\,MB each way per batch};
 \end{tikzpicture}
 
 \vspace{0.5em}
@@ -1061,7 +1062,7 @@ Table~\ref{tab:comm-costs} the volume and cost of each communication.
 Path list \texttt{MPI\_\discretionary{}{}{}Bcast} & MPI collective & $\approx$5\,MB &
   ${<}1\%$ \\[3pt]
 Image loading & Disk I/O         & 3.05\,GB read & $\approx$98\% \\[3pt]
-GPU-stage dispatch$^{\dagger}$ (H2D + kernel + D2H + API call) & OpenCL & $\sim$12.6\,MB/batch &
+GPU-stage dispatch$^{\dagger}$ (H2D + kernel + D2H + API call) & OpenCL & \parbox[t]{2.5cm}{\raggedright $2\times{\approx}12.6$\,MB per batch and stage\strut} &
   $\approx$12\% \\[3pt]
 Feature \texttt{MPI\_\discretionary{}{}{}Gather}   & MPI collective & \textbf{213\,KB} &
   ${<}0.1\%$ \\[3pt]
