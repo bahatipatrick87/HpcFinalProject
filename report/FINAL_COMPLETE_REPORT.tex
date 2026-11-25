@@ -1004,35 +1004,51 @@ Table~\ref{tab:comm-costs} the volume and cost of each communication.
                   minimum width=3.2cm, minimum height=0.72cm,
                   align=center, rounded corners=3pt},
     mpi/.style={->,thick,NavyBlue!70},
-    io/.style={ ->,thick,OrangeGPU!60,dashed}
+    tmpi/.style={semithick,NavyBlue!55},
+    bar/.style={very thick,NavyBlue!70,densely dotted},
+    io/.style={ ->,thick,OrangeGPU!60,dashed},
+    lbl/.style={right,font=\scriptsize,align=left},
   ]
-  \node[diskn, minimum width=10.3cm] (dk) at (4.35,5.5) {Storage (image files)};
+  \node[diskn, minimum width=10.3cm] (dk) at (4.35,6.3) {Storage (image files)};
   \node[rank] (r0) at (0.0,2.6) {Rank 0\\(root)};
   \node[rank] (r1) at (2.9,2.6) {Rank 1};
   \node[rank] (r2) at (5.8,2.6) {Rank 2};
   \node[rank] (r3) at (8.7,2.6) {Rank $P{-}1$};
   \node at (7.25,2.6) {$\cdots$};
-  \node[gpun, minimum width=10.3cm] (gpu) at (4.35,-0.4)
+  \node[gpun, minimum width=10.3cm] (gpu) at (4.35,-0.75)
     {Shared GPU (OpenCL) --- 1 device; all ranks contend};
-  % disk reads and host--device transfers: straight, one per rank
-  \foreach \x/\r in {-0.4/r0, 2.5/r1, 5.4/r2, 8.3/r3}{
-    \draw[io] (\x,5.5-0.39) -- (\x,3.08);
-    \draw[<->,thick,OrangeGPU!60,dashed] (\x,2.12) -- (\x,0.08);
+  % (3) disk reads and host--device transfers: straight, one per rank
+  \foreach \x in {-0.4, 2.5, 5.4, 8.3}{
+    \draw[io] (\x,6.3-0.39) -- (\x,3.08);
+    \draw[<->,thick,OrangeGPU!60,dashed] (\x,2.12) -- (\x,-0.27);
   }
-  % MPI_Bcast: rank 0 to every other rank
-  \draw[thick,NavyBlue!70] (0.4,3.08) -- (0.4,3.8) -- (9.1,3.8);
-  \foreach \x in {3.3,6.2,9.1} \draw[mpi] (\x,3.8) -- (\x,3.08);
-  % MPI_Gather: every rank to rank 0
-  \draw[thick,NavyBlue!70] (9.1,2.12) -- (9.1,1.1) -- (0.4,1.1);
-  \foreach \x in {3.3,6.2} \draw[thick,NavyBlue!70] (\x,2.12) -- (\x,1.1);
-  \draw[mpi] (0.4,1.1) -- (0.4,2.12);
-  % labels, right of the figure, clear of every line
-  \node[right,font=\scriptsize,text=OrangeGPU!90!black,align=left] at (9.75,4.6) {disk reads\\3.05\,GB};
-  \node[right,font=\scriptsize,text=NavyBlue!80,align=left] at (9.75,3.65)
-    {\texttt{MPI\_Bcast}\\path list, $\approx$5\,MB};
-  \node[right,font=\scriptsize,text=NavyBlue!80,align=left] at (9.75,1.35)
-    {\texttt{MPI\_Gather}\\1 float/image, \textbf{213\,KB}};
-  \node[right,font=\scriptsize,text=OrangeGPU!90!black,align=left] at (9.75,0.55) {H2D + D2H per GPU stage\\$\approx$12.6\,MB each way per batch};
+  % (1) MPI_Barrier: all ranks synchronise before timing starts
+  \draw[bar] (0,3.55) -- (8.7,3.55);
+  \foreach \x in {0,2.9,5.8,8.7} \draw[bar] (\x,3.55) -- (\x,3.08);
+  % (2) MPI_Bcast: rank 0 to every other rank
+  \draw[thick,NavyBlue!70] (0.4,3.08) -- (0.4,4.5) -- (9.1,4.5);
+  \foreach \x in {3.3,6.2,9.1} \draw[mpi] (\x,4.5) -- (\x,3.08);
+  % (4) MPI_Gather of features: every rank to rank 0
+  \draw[thick,NavyBlue!70] (9.1,2.12) -- (9.1,1.55) -- (0.4,1.55);
+  \foreach \x in {3.3,6.2} \draw[thick,NavyBlue!70] (\x,2.12) -- (\x,1.55);
+  \draw[mpi] (0.4,1.55) -- (0.4,2.12);
+  % (5) MPI_Gather of per-rank times: every rank to rank 0
+  \draw[tmpi] (8.7,2.12) -- (8.7,0.95) -- (0,0.95);
+  \foreach \x in {2.9,5.8} \draw[tmpi] (\x,2.12) -- (\x,0.95);
+  \draw[tmpi,->] (0,0.95) -- (0,2.12);
+  % labels, right of the figure, clear of every line; numbers give execution order
+  \node[lbl,text=OrangeGPU!90!black] at (9.75,5.4)
+    {\textbf{(3)} disk reads, 3.05\,GB};
+  \node[lbl,text=NavyBlue!80] at (9.75,4.5)
+    {\textbf{(2)} \texttt{MPI\_Bcast}\\path list, $\approx$5\,MB};
+  \node[lbl,text=NavyBlue!80] at (9.75,3.45)
+    {\textbf{(1)} \texttt{MPI\_Barrier}\\timing start, 0\,B};
+  \node[lbl,text=NavyBlue!80] at (9.75,1.75)
+    {\textbf{(4)} \texttt{MPI\_Gather}\\1 float/image, \textbf{213\,KB}};
+  \node[lbl,text=NavyBlue!80] at (9.75,0.95)
+    {\textbf{(5)} \texttt{MPI\_Gather}\\per-rank time, 1 float/rank};
+  \node[lbl,text=OrangeGPU!90!black] at (9.75,0.15)
+    {\textbf{(3)} H2D + D2H per GPU stage\\$\approx$12.6\,MB each way per batch};
 \end{tikzpicture}
 
 \vspace{0.5em}
@@ -1040,10 +1056,12 @@ Table~\ref{tab:comm-costs} the volume and cost of each communication.
 \begin{minipage}{0.95\linewidth}\footnotesize
   \textbf{Legend.}
   \textcolor{NavyBlue!70}{\textbf{Solid blue}}: MPI collectives
-  (\texttt{MPI\_\discretionary{}{}{}Bcast}, \texttt{MPI\_\discretionary{}{}{}Gather}).
+  (\texttt{MPI\_\discretionary{}{}{}Bcast}, \texttt{MPI\_\discretionary{}{}{}Gather}; the
+  thinner line is the gather of per-rank times).
+  \textcolor{NavyBlue!70}{\textbf{Dotted blue}}: \texttt{MPI\_\discretionary{}{}{}Barrier}.
   \textcolor{OrangeGPU!80}{\textbf{Orange dashed}}: disk reads and
-  OpenCL host--device transfers (H2D/D2H). The timing barrier and the gather of
-  per-rank times are not drawn.
+  OpenCL host--device transfers (H2D/D2H). Numbers give the order of execution:
+  barrier, broadcast, loading and GPU work, feature gather, gather of per-rank times.
 \end{minipage}}
 \caption{Interaction graph. All MPI ranks share one physical GPU.}
 \label{fig:interaction}
