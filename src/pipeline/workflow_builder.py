@@ -14,7 +14,7 @@ from stages.feature_stage import feature_extraction_stage
 
 
 # Registry of stage names -> (task_name, fn, requires, produces) for the
-# user-customizable workflow (proposal 0.5.5). Mapping stage IDs through this
+# user-customizable workflow. Mapping stage IDs through this
 # dict rather than calling functions directly by name is what lets
 # config/pipeline.yaml's `stages` list reorder or drop stages without the
 # config file needing to reference Python identifiers. `requires`/`produces`

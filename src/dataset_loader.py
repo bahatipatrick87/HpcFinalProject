@@ -54,8 +54,8 @@ def get_partitioned_paths(
         if total_images == 0:
             print(f"[Warning] No images found in '{data_dir}'. Will use simulated data.")
 
-    # MPI_Bcast: the one and only inter-rank communication needed before compute
-    # begins. After this call every rank independently computes its own slice
+    # MPI_Bcast: the one and only inter-rank communication needed before compute begins.
+    # After this call every rank independently computes its own slice
     # below, with no further coordination required.
     if comm is not None:
         all_files = comm.bcast(all_files, root=0)

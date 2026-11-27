@@ -21,9 +21,9 @@ RESULTS_DIR = PROJECT_ROOT / "results"
 LOG_DIR = RESULTS_DIR / "logs"
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 
-# Fixed workload: 20,000 images (with 1 rank, this is the total; the first
-# 20,000 files of the sorted list, all JPEGs), large enough that process and
-# MPI start-up do not swamp the signal (report Table 5.6).
+# Fixed workload: 20,000 images (with 1 rank, this is the total): the first
+# 20,000 files in directory-walk order, 14,000 JPEGs and 6,000 GeoTIFFs; large
+# enough that process and MPI start-up do not swamp the signal (report Table 5.6).
 IMAGES_FOR_OPENMP_SCALING = int(os.environ.get("OPENMP_SCALING_IMAGES", "20000"))
 
 
